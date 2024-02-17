@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
+import * as fs from 'fs';
 
 export function activate(context: vscode.ExtensionContext) {
 
@@ -8,6 +9,47 @@ export function activate(context: vscode.ExtensionContext) {
 	let disposable = vscode.commands.registerCommand('myfirstextension.helloWorld', () => {
 		vscode.window.showInformationMessage('Hello VS Code');
 	});
+
+    const panel = vscode.window.createWebviewPanel(
+        'chatInterface',
+        'LAIA',
+        vscode.ViewColumn.Two,
+        {
+            enableScripts: true
+        }
+    );
+
+    const htmlPath = vscode.Uri.file(path.join(context.extensionPath, 'src', 'chat.html'));
+
+    fs.readFile(htmlPath.fsPath, 'utf-8', (err, data) => {
+        if (err) {
+            console.error(err);
+            return;
+        }
+        panel.webview.html = data;
+    });
+
+    panel.webview.onDidReceiveMessage(
+        message => {
+          switch (message.command) {
+            case 'openapi':
+                vscode.window.showInformationMessage(message.text);
+                const directoryPath = vscode.workspace.rootPath;
+
+                const openapiFilePath = path.join(directoryPath ? directoryPath : '', 'openapi.yaml');
+                fs.access(openapiFilePath, fs.constants.F_OK, async (err) => {
+                    if (err) {
+                        await writeFile(openapiFilePath, message.text);
+                    } else {
+                        await writeFile(openapiFilePath, message.text);
+                    }
+                });
+                return;
+          }
+        },
+        undefined,
+        context.subscriptions
+    );
 
 	let onSaveCleaner = vscode.workspace.onDidSaveTextDocument((e) => {
 		if (e.languageId == 'yaml' || e.fileName.endsWith('.yaml') || e.fileName.endsWith('.yml')){
@@ -36,6 +78,18 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(disposable);
 	context.subscriptions.push(onSaveCleaner);
+}
+
+async function writeFile(filePath: string, text: string): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+        fs.writeFile(filePath, text, (err) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve();
+            }
+        });
+    });
 }
 
 export function deactivate() {}
