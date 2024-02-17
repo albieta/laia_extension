@@ -1,26 +1,41 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import * as path from 'path';
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
 	console.log('Congratulations, your extension "myfirstextension" is now active!');
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
 	let disposable = vscode.commands.registerCommand('myfirstextension.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
 		vscode.window.showInformationMessage('Hello VS Code');
 	});
 
+	let onSaveCleaner = vscode.workspace.onDidSaveTextDocument((e) => {
+		if (e.languageId == 'yaml' || e.fileName.endsWith('.yaml') || e.fileName.endsWith('.yml')){
+			vscode.window.showInformationMessage('OpenAPI was updated!');
+
+            vscode.window.showInputBox({ prompt: 'Regenerate project code? (yes/no)' }).then((input) => {
+                if (input && input.toLowerCase() === 'yes') {
+                    vscode.window.showInformationMessage('Re-generating project code...');
+
+                    const directoryPath = path.dirname(e.uri.fsPath);
+
+                    let terminal = vscode.window.activeTerminal || vscode.window.createTerminal();
+
+                    if (process.platform === 'win32') {
+                        terminal.sendText(`cd ${directoryPath}`);
+                        terminal.sendText(`env\\Scripts\\activate`);
+                        terminal.sendText(`python main.py`);
+                    } else {
+                        terminal.sendText(`cd ${directoryPath} && source env/bin/activate && python main.py`);
+                    }
+                }
+            });
+		}
+	});
+
+
 	context.subscriptions.push(disposable);
+	context.subscriptions.push(onSaveCleaner);
 }
 
-// This method is called when your extension is deactivated
 export function deactivate() {}
