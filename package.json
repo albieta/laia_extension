@@ -14,8 +14,8 @@
   "contributes": {
     "commands": [
       {
-        "command": "myfirstextension.helloWorld",
-        "title": "Hello World"
+        "command": "myfirstextension.laia",
+        "title": "Laia Chat :)"
       }
     ]
   },

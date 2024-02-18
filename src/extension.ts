@@ -6,7 +6,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	console.log('Congratulations, your extension "myfirstextension" is now active!');
 
-	let disposable = vscode.commands.registerCommand('myfirstextension.helloWorld', () => {
+	let disposable = vscode.commands.registerCommand('myfirstextension.laia', () => {
 		vscode.window.showInformationMessage('Hello VS Code');
 	});
 
