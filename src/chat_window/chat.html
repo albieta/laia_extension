@@ -110,9 +110,13 @@
                     const message = messageInput.value.trim();
                     if (message) {
                         appendMessage(message, 'sent');
-                        messageInput.value = '';
 
-                        generateOpenAPISpec(message);
+                        vscode.postMessage({
+                            command: 'openapi',
+                            text: messageInput.value.trim()
+                        });
+
+                        messageInput.value = '';
                     }
                 }
 
@@ -125,50 +129,22 @@
                     }
                 });
 
+                window.addEventListener('message', event => {
+                    const message = event.data;
+                    if (message.command === 'openaiResponse') {
+                        if (message.response.startsWith('###')) {
+                            appendMessage('I have added the Openapi specifications to the openapi.yaml file. Tell me if you need to do any modifications.', 'received');
+                        } else {
+                            appendMessage(message.response, 'received');
+                        }
+                    }
+                });
+
                 const messages = document.querySelectorAll('.message');
                 messages.forEach(message => {
                     messagesContainer.prepend(message);
                 });
 
-                async function generateOpenAPISpec(userInput) {
-                    const apiKey = 'api-key';
-                    const url = 'https://api.openai.com/v1/chat/completions';
-
-                    try {
-                        const response = await fetch(url, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${apiKey}`
-                            },
-                            body: JSON.stringify({
-                                model: 'gpt-3.5-turbo',
-                                messages: [
-                                    { role: 'system', content: "You need to provide an openapi.yaml file content, given the user specifications. the format of the answer you provide must be in a json format, with two parameters, {'answer':'explanation', 'openapi': 'file content'} the 'answer' with the explanation of why you developed such openapi and the 'openapi' with the content of the file and nothing more. you must provide the crud operations following the format: get /model_singular/{id} (for getting one element) post /model_singular (to create one element) put /model_singular/{id} (to update one element) delete /model_singular/{id} (to delete one elmement) get /model_plural (to get all elements). and the Ids must be normal strings, and the relations are handled by saving the id of the related element. Also add the schemas definitions of the models." },
-                                    { role: 'user', content: userInput }
-                                ],
-                                temperature: 0.8
-                            })
-                        });
-
-                        if (!response.ok) {
-                            throw new Error('Failed to generate OpenAPI specification');
-                        }
-
-                        const data = await response.json();
-    
-                        const { answer, openapi } = JSON.parse(data.choices[0].message.content);
-
-                        appendMessage(answer, 'received');
-
-                        vscode.postMessage({
-                            command: 'openapi',
-                            text: openapi
-                        });
-                    } catch (error) {
-                        console.error('Error:', error);
-                    }
-                }
             }());
         </script>
     </body>

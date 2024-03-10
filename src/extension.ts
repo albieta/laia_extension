@@ -1,6 +1,10 @@
 import * as vscode from 'vscode';
+const YAML = require('yaml');
 import * as path from 'path';
 import * as fs from 'fs';
+import { petition_openai } from './LLM/openai';
+
+let messageContext: { user: string, assistant: string|any }[] = [];
 
 export function activate(context: vscode.ExtensionContext) {
 
@@ -19,7 +23,7 @@ export function activate(context: vscode.ExtensionContext) {
         }
     );
 
-    const htmlPath = vscode.Uri.file(path.join(context.extensionPath, 'src', 'chat.html'));
+    const htmlPath = vscode.Uri.file(path.join(context.extensionPath, 'src', 'chat_window', 'chat.html'));
 
     fs.readFile(htmlPath.fsPath, 'utf-8', (err, data) => {
         if (err) {
@@ -34,16 +38,27 @@ export function activate(context: vscode.ExtensionContext) {
           switch (message.command) {
             case 'openapi':
                 vscode.window.showInformationMessage(message.text);
-                const directoryPath = vscode.workspace.rootPath;
+                petition_openai(messageContext, message.text)
+                    .then(response => {
+                        vscode.window.showInformationMessage(response || "");
+                        panel.webview.postMessage({ command: 'openaiResponse', response });
+                        messageContext.push({ user: message.text, assistant: response})
+                        
+                        if (response?.startsWith('###')) {
+                            const yaml_doc = new YAML.Document();
+                            yaml_doc.contents = JSON.parse(response.replace(/###/g, ''))
+                            const directoryPath = vscode.workspace.rootPath;
 
-                const openapiFilePath = path.join(directoryPath ? directoryPath : '', 'openapi.yaml');
-                fs.access(openapiFilePath, fs.constants.F_OK, async (err) => {
-                    if (err) {
-                        await writeFile(openapiFilePath, message.text);
-                    } else {
-                        await writeFile(openapiFilePath, message.text);
-                    }
-                });
+                            const openapiFilePath = path.join(directoryPath ? directoryPath : '', 'openapi.yaml');
+                            fs.access(openapiFilePath, fs.constants.F_OK, async (err) => {
+                                if (err) {
+                                    await writeFile(openapiFilePath, yaml_doc.toString());
+                                } else {
+                                    await writeFile(openapiFilePath, yaml_doc.toString());
+                                }
+                            });
+                        }
+                    });
                 return;
           }
         },
@@ -68,7 +83,7 @@ export function activate(context: vscode.ExtensionContext) {
                         terminal.sendText(`env\\Scripts\\activate`);
                         terminal.sendText(`python main.py`);
                     } else {
-                        terminal.sendText(`cd ${directoryPath} && source env/bin/activate && python main.py`);
+                        terminal.sendText(`cd ${directoryPath} && source venv/bin/activate && python main.py`);
                     }
                 }
             });
