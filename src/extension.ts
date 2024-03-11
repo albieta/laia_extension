@@ -35,32 +35,82 @@ export function activate(context: vscode.ExtensionContext) {
 
     panel.webview.onDidReceiveMessage(
         message => {
-          switch (message.command) {
-            case 'openapi':
-                vscode.window.showInformationMessage(message.text);
-                petition_openai(messageContext, message.text)
-                    .then(response => {
-                        vscode.window.showInformationMessage(response || "");
-                        panel.webview.postMessage({ command: 'openaiResponse', response });
-                        messageContext.push({ user: message.text, assistant: response})
-                        
-                        if (response?.startsWith('###')) {
-                            const yaml_doc = new YAML.Document();
-                            yaml_doc.contents = JSON.parse(response.replace(/###/g, ''))
-                            const directoryPath = vscode.workspace.rootPath;
+            const directoryPath = vscode.workspace.rootPath;
+            switch (message.command) {
+                case 'openapi':
+                    vscode.window.showInformationMessage(message.text);
+                    petition_openai(messageContext, message.text)
+                        .then(response => {
+                            messageContext.push({ user: message.text, assistant: response})
+                            if (response?.startsWith('###')) {
+                                try {
+                                    const yaml_doc = new YAML.Document();
+                                    yaml_doc.contents = JSON.parse(response.replace(/###/g, ''))
+                                    const directoryPath = vscode.workspace.rootPath;
 
-                            const openapiFilePath = path.join(directoryPath ? directoryPath : '', 'openapi.yaml');
-                            fs.access(openapiFilePath, fs.constants.F_OK, async (err) => {
-                                if (err) {
-                                    await writeFile(openapiFilePath, yaml_doc.toString());
-                                } else {
-                                    await writeFile(openapiFilePath, yaml_doc.toString());
+                                    const openapiFilePath = path.join(directoryPath ? directoryPath : '', 'openapi.yaml');
+                                    fs.access(openapiFilePath, fs.constants.F_OK, async (err) => {
+                                        if (err) {
+                                            await writeFile(openapiFilePath, yaml_doc.toString());
+                                        } else {
+                                            await writeFile(openapiFilePath, yaml_doc.toString());
+                                        }
+                                    });
+                                } catch (error: any) {
+                                    panel.webview.postMessage({ command: 'errorOpenai', error: error.message });
                                 }
-                            });
-                        }
-                    });
-                return;
-          }
+                            }
+                            panel.webview.postMessage({ command: 'openaiResponse', response });
+                        });
+                    return;
+                case 'python_code_gen':
+                    vscode.window.showInformationMessage('Re-generating python code...');
+                    if (process.platform === 'win32') {
+                        //terminal.sendText(`cd ${directoryPath}`);
+                        //terminal.sendText(`env\\Scripts\\activate`);
+                        //terminal.sendText(`python main_backend.py`);
+                        //terminal.sendText(`python main_frontend.py`);
+                    } else {
+                        let terminal1 = vscode.window.activeTerminal || vscode.window.createTerminal();
+                        let terminal2 = vscode.window.createTerminal();
+                        terminal1.sendText(`cd ${directoryPath} && source venv/bin/activate && python main_backend.py`);
+                        terminal2.sendText(`cd ${directoryPath} && source venv/bin/activate && python main_frontend.py`);
+                    }
+                    return;
+                case 'flutter_code_gen':
+                    vscode.window.showInformationMessage('Re-generating flutter code...');
+                    if (process.platform === 'win32') {
+                        //terminal.sendText(`cd ${directoryPath}/frontend`);
+                        //terminal.sendText(`flutter pub run build_runner build`);
+                        //terminal.sendText(`flutter run -d chrome`);
+                    } else {
+                        let terminal = vscode.window.activeTerminal || vscode.window.createTerminal();
+                        terminal.sendText(`cd ${directoryPath}/frontend && flutter pub run build_runner build && flutter run -d chrome`);
+                    }
+                    return;
+                case 'backend':
+                    vscode.window.showInformationMessage('Activating Backend...');
+                    if (process.platform === 'win32') {
+                        //terminal.sendText(`cd ${directoryPath}/frontend`);
+                        //terminal.sendText(`env\\Scripts\\activate`);
+                        //terminal.sendText(`python main_backend.py`);
+                    } else {
+                        let terminal = vscode.window.activeTerminal || vscode.window.createTerminal();
+                        terminal.sendText(`cd ${directoryPath} && source venv/bin/activate && python main_backend.py`);
+                    }
+                    return;
+                case 'frontend':
+                    vscode.window.showInformationMessage('Re-generating flutter code...');
+                    if (process.platform === 'win32') {
+                        //terminal.sendText(`cd ${directoryPath}/frontend`);
+                        //terminal.sendText(`flutter pub run build_runner build`);
+                        //terminal.sendText(`flutter run -d chrome`);
+                    } else {
+                        let terminal = vscode.window.activeTerminal || vscode.window.createTerminal();
+                        terminal.sendText(`cd ${directoryPath}/frontend && flutter run -d chrome`);
+                    }
+                    return;
+            }
         },
         undefined,
         context.subscriptions
@@ -81,9 +131,10 @@ export function activate(context: vscode.ExtensionContext) {
                     if (process.platform === 'win32') {
                         terminal.sendText(`cd ${directoryPath}`);
                         terminal.sendText(`env\\Scripts\\activate`);
-                        terminal.sendText(`python main.py`);
+                        terminal.sendText(`python main_backend.py`);
+                        terminal.sendText(`python main_frontend.py`);
                     } else {
-                        terminal.sendText(`cd ${directoryPath} && source venv/bin/activate && python main.py`);
+                        terminal.sendText(`cd ${directoryPath} && source venv/bin/activate && python main_backend.py && python main_frontend.py`);
                     }
                 }
             });

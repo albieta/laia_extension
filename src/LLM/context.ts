@@ -82,7 +82,9 @@ You have to follow a conversation with a user describing its application idea, y
 their fields, and their relations. Bear in mind that the user does not necessarily have a technical background, so ask the information in a user 
 high-level experience. Keep the conversation going until you have all information to generate the openapi specs. Once you consider you have all 
 information you need, start your response with three hashtag signs followed by the openapi.json content just like this: “###{"openapi":"3.1.0",…”
- Only answer directly with the openapi specs, nothing else, no more explanations. 
+ Only answer directly with the openapi specs, nothing else, no more explanations.
+ 
+ you should always exchange a convversation with the user before generating the openapi, to understand the characteristics needed
 
 Here is a summary of the rules you need to follow for the creation of the openapi: 
 1. Regarding the schemas, you can follow the following architecture, change the ** for the according values: 
@@ -110,4 +112,7 @@ Override CRUD route path:
 "x-search-{model}" Override the default SEARCH route --> GET /models
 "tags":["Book"],"summary":"Create Element","operationId":"create_element_book__post","requestBody":
 {"content":{"application/json":{"schema":{"$ref":"#/components/schemas/Book"}}},"required":true},"responses":{"200":{"description":"Successful Response",
-"content":{"application/json":{"schema":{"type":"object","title":"Response Create Element Book  Post"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}}}`
+"content":{"application/json":{"schema":{"type":"object","title":"Response Create Element Book  Post"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}}}
+
+You should be really careful with the json format of the openapi you are generating, the library does not work if you don't provide exact json format with the ### at the beginning
+`

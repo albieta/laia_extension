@@ -11,7 +11,7 @@
             }
             #chatbox {
                 position: fixed;
-                top: 0;
+                top: 40px; 
                 bottom: 0;
                 width: 100%;
                 padding: 10px;
@@ -74,9 +74,57 @@
             #send-button:hover {
                 background-color: #243318;
             }
+            #fixed-buttons {
+                position: fixed;
+                padding-top: 5px;
+                padding-bottom: 10px;
+                top: 10px;
+                left: 0;
+                right: 0;
+                display: flex;
+                justify-content: center;
+                flex-direction: row;
+                z-index: 1;
+                border-bottom:2px solid #8d8d8d;
+            }
+            #python-gen-button, #flutter-gen-button {
+                margin-right: 10px;
+                padding: 8px 10px;
+                background-color: #384d29;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                transition: background-color 0.3s;
+            }
+
+            #python-gen-button:hover, #flutter-gen-button:hover {
+                background-color: #243318;
+            }
+
+            #backend-button, #frontend-button {
+                margin-right: 10px;
+                padding: 8px 10px;
+                background-color: #294d4a;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                transition: background-color 0.3s;
+            }
+            
+            #backend-button:hover, #frontend-button:hover {
+                background-color: #1c3533;
+            }
         </style>
     </head>
     <body>
+        <div id="fixed-buttons">
+            <button id="backend-button">Activate Backend</button>
+            <button id="python-gen-button">Activate Python Code Gen</button>
+            <button id="flutter-gen-button">Activate Flutter Code Gen</button>
+            <button id="frontend-button">Activate Frontend</button>
+        </div>
         <div id="chatbox">
             <div id="messages"></div>
             <div id="user-input">
@@ -106,6 +154,80 @@
                     messagesContainer.scrollTop = messagesContainer.scrollHeight;
                 }
 
+                function appendAskPythonCodeGen(content) {
+                    const messageElement = document.createElement('div');
+                    messageElement.classList.add('message');
+                    messageElement.classList.add('received');
+                    messageElement.innerHTML = content + '<br><button id="python-yes">Yes</button> <button id="python-no">No</button>';
+                    messagesContainer.appendChild(messageElement);
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+                    document.getElementById('python-yes').addEventListener('click', function() {
+                        appendTriggerPythonCodeGen(true);
+                    });
+
+                    document.getElementById('python-no').addEventListener('click', function() {
+                        appendTriggerPythonCodeGen(false);
+                    });
+                }
+
+                function appendTriggerPythonCodeGen(bool) {
+                    if (bool == true) {
+                        vscode.postMessage({
+                            command: 'python_code_gen',
+                            text: ""
+                        });
+                        appendAskFlutterCodeGen("Would you like me to activate the flutter code generator?");
+                    }
+                }
+
+                function appendAskFlutterCodeGen(content) {
+                    const messageElement = document.createElement('div');
+                    messageElement.classList.add('message');
+                    messageElement.classList.add('received');
+                    messageElement.innerHTML = content + '<br><button id="flutter-yes">Yes</button> <button id="flutter-no">No</button>';
+                    messagesContainer.appendChild(messageElement);
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+                    document.getElementById('flutter-yes').addEventListener('click', function() {
+                        appendTriggerFlutterCodeGen(true);
+                    });
+
+                    document.getElementById('flutter-no').addEventListener('click', function() {
+                        appendTriggerFlutterCodeGen(false);
+                    });
+                }
+
+                function appendTriggerFlutterCodeGen(bool) {
+                    console.log(bool)
+                    if (bool == true) {
+                        vscode.postMessage({
+                            command: 'flutter_code_gen',
+                            text: ""
+                        });
+                    }
+                }
+
+                function appendTriggerBackend(bool) {
+                    console.log(bool)
+                    if (bool == true) {
+                        vscode.postMessage({
+                            command: 'backend',
+                            text: ""
+                        });
+                    }
+                }
+
+                function appendTriggerFrontend(bool) {
+                    console.log(bool)
+                    if (bool == true) {
+                        vscode.postMessage({
+                            command: 'frontend',
+                            text: ""
+                        });
+                    }
+                }
+
                 function sendMessage() {
                     const message = messageInput.value.trim();
                     if (message) {
@@ -129,14 +251,37 @@
                     }
                 });
 
+                document.getElementById('python-gen-button').addEventListener('click', function() {
+                    appendTriggerPythonCodeGen(true);
+                });
+
+                document.getElementById('flutter-gen-button').addEventListener('click', function() {
+                    appendTriggerFlutterCodeGen(true);
+                });
+
+                document.getElementById('backend-button').addEventListener('click', function() {
+                    appendTriggerBackend(true);
+                });
+
+                document.getElementById('frontend-button').addEventListener('click', function() {
+                    appendTriggerFrontend(true);
+                });
+
                 window.addEventListener('message', event => {
                     const message = event.data;
                     if (message.command === 'openaiResponse') {
                         if (message.response.startsWith('###')) {
                             appendMessage('I have added the Openapi specifications to the openapi.yaml file. Tell me if you need to do any modifications.', 'received');
+                            appendAskPythonCodeGen('Would you like me to activate the python code generator?')
                         } else {
                             appendMessage(message.response, 'received');
                         }
+                    }
+                    else if (message.command === 'errorOpenai') {
+                        vscode.postMessage({
+                            command: 'openapi',
+                            text: "Send the openapi json again, there was an error: " + message.error
+                        });
                     }
                 });
 
