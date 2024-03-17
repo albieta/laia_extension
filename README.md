@@ -11,6 +11,12 @@ vsce package
 code --install-extension laiaextension-X.X.X.vsix
 ```
 
+## Prerequisites
+
+* `Flutter 3.16.5, Dart 3.2.3`
+* `Python`
+* `MongoDB`
+
 ## Related Projects
 
 * LAIA - [laia-gen-lib](https://github.com/albieta/LAIA)
