@@ -7,7 +7,8 @@ The LAIA VS Code Extension facilitates interaction with the LAIA assistant by pr
 ## Installation
 
 ```
-
+vsce package
+code --install-extension laiaextension-X.X.X.vsix
 ```
 
 ## Related Projects
