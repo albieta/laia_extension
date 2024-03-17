@@ -1,8 +1,9 @@
 {
-  "name": "myfirstextension",
-  "displayName": "MyFirstExtension",
-  "description": "my first extension",
+  "name": "laiaextension",
+  "displayName": "Laia Extension",
+  "description": "Facilitates interaction with the LAIA assistant by providing a chat interface",
   "version": "0.0.1",
+  "icon": "./icon.png",
   "engines": {
     "vscode": "^1.83.0"
   },
@@ -14,7 +15,7 @@
   "contributes": {
     "commands": [
       {
-        "command": "myfirstextension.laia",
+        "command": "laiaextension.laia",
         "title": "Laia Chat :)"
       }
     ]
@@ -31,6 +32,7 @@
     "@types/mocha": "^10.0.2",
     "@types/node": "18.x",
     "@types/node-fetch": "^2.6.11",
+    "@types/ssh2": "^1.15.0",
     "@types/vscode": "^1.83.0",
     "@typescript-eslint/eslint-plugin": "^6.7.3",
     "@typescript-eslint/parser": "^6.7.3",
@@ -44,6 +46,7 @@
     "botkit": "^4.15.0",
     "js-yaml": "^4.1.0",
     "node-fetch": "^2.7.0",
+    "ssh2": "^1.15.0",
     "yaml": "^2.4.1"
   }
 }

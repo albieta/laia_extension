@@ -1,3 +1,4 @@
+export const chat_html = `
 <!DOCTYPE html>
 <html lang="en">
     <head>
@@ -154,6 +155,26 @@
                     messagesContainer.scrollTop = messagesContainer.scrollHeight;
                 }
 
+                function appendLetter(letter, done) {
+                    if (done == false) {
+                        const messageExisting = messagesContainer.querySelector('.ollama');
+                        if (!messageExisting) {
+                            const messageExisting = document.createElement('div');
+                            messageExisting.classList.add('message');
+                            messageExisting.classList.add('received');
+                            messageExisting.classList.add('ollama');
+                            messagesContainer.appendChild(messageExisting);
+                        }
+                        messageExisting.textContent += letter;
+                    } else {
+                        const messageExisting = document.querySelector('.ollama');
+                        if (messageExisting) {
+                            messageExisting.classList.remove('ollama');
+                        }
+                        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                    }
+                }
+
                 function appendAskPythonCodeGen(content) {
                     const messageElement = document.createElement('div');
                     messageElement.classList.add('message');
@@ -270,7 +291,7 @@
                 window.addEventListener('message', event => {
                     const message = event.data;
                     if (message.command === 'openaiResponse') {
-                        if (message.response.startsWith('###')) {
+                        if (message.response.includes('{')) {
                             appendMessage('I have added the Openapi specifications to the openapi.yaml file. Tell me if you need to do any modifications.', 'received');
                             appendAskPythonCodeGen('Would you like me to activate the python code generator?')
                         } else {
@@ -283,6 +304,9 @@
                             text: "Send the openapi json again, there was an error: " + message.error
                         });
                     }
+                    else if (message.command === 'ollamaResponse') {
+                        appendLetter(message.letter, message.done)
+                    }
                 });
 
                 const messages = document.querySelectorAll('.message');
@@ -294,3 +318,4 @@
         </script>
     </body>
 </html>
+`
