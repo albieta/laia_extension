@@ -1,8 +1,8 @@
 import fetch from 'node-fetch';
 import { system_context_json } from './context';
 
-export async function petition_openai(data: any, query: string) {
-    const apiKey = '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';
+export async function petition_openai(api_key: string, data: any, query: string) {
+    const apiKey = api_key;
     const url = 'https://api.openai.com/v1/chat/completions';
 
     try {

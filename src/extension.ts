@@ -50,24 +50,53 @@ export function activate(context: vscode.ExtensionContext) {
                     setup_files(directoryPath, panel);
                     panel.webview.html = chat_html;
                     return;
-                case 'openapi':
-                    vscode.window.showInformationMessage(message.text);
-                    petition_openai(messageContext, message.text)
-                        .then(response => {
-                            if (messageContext.length == 0) {
-                                fs.appendFileSync(logFilePathOpenai, `CONVERSATION:\n`, 'utf-8');
-                            }       
-                            fs.appendFileSync(logFilePathOpenai, `User: ${message.text} Assistant: ${response?.trimStart()}\n`, 'utf-8');
-                            messageContext.push({ user: message.text, assistant: response})
-                            const startIndex = response?.indexOf('{');
-                            if (startIndex !== -1) {
-                                const endIndex = response?.lastIndexOf('}');
-                                if (endIndex !== -1) {
-                                    const jsonString = response?.substring(startIndex!, endIndex! + 1);
+                case 'sendMessage':
+                    if (current_config.laia.llm_model === 'openai') {
+                        petition_openai(current_config.openai.api_key, messageContext, message.text)
+                            .then(response => {
+                                if (messageContext.length == 0) {
+                                    fs.appendFileSync(logFilePathOpenai, `CONVERSATION:\n`, 'utf-8');
+                                }       
+                                fs.appendFileSync(logFilePathOpenai, `User: ${message.text} Assistant: ${response?.trimStart()}\n`, 'utf-8');
+                                messageContext.push({ user: message.text, assistant: response})
+                                const startIndex = response?.indexOf('{');
+                                if (startIndex !== -1) {
+                                    const endIndex = response?.lastIndexOf('}');
+                                    if (endIndex !== -1) {
+                                        const jsonString = response?.substring(startIndex!, endIndex! + 1);
+                                        try {
+                                            const yaml_doc = new YAML.Document();
+                                            yaml_doc.contents = JSON.parse(jsonString!);
+                
+                                            const directoryPath = vscode.workspace.rootPath;
+
+                                            const openapiFilePath = path.join(directoryPath ? directoryPath : '', 'openapi.yaml');
+                                            fs.access(openapiFilePath, fs.constants.F_OK, async (err) => {
+                                                if (err) {
+                                                    await writeFile(openapiFilePath, yaml_doc.toString());
+                                                } else {
+                                                    await writeFile(openapiFilePath, yaml_doc.toString());
+                                                }
+                                            });
+                                        } catch (error: any) {
+                                            panel.webview.postMessage({ command: 'errorResponse', error: error.message });
+                                        }
+                                    }
+                                }
+                                panel.webview.postMessage({ command: 'llmResponse', response });
+                            });
+                    } else {
+                        petition_ollama_full(current_config.laia.llm_model, messageContext, message.text)
+                            .then(response => {
+                                if (messageContext.length == 0) {
+                                    fs.appendFileSync(logFilePathSuperserver, `CONVERSATION:\n`, 'utf-8');
+                                }      
+                                fs.appendFileSync(logFilePathSuperserver, `User: ${message.text} Assistant: ${response.trimStart()}\n`, 'utf-8');
+                                messageContext.push({ user: message.text, assistant: response})
+                                if (response?.startsWith('###')) {
                                     try {
                                         const yaml_doc = new YAML.Document();
-                                        yaml_doc.contents = JSON.parse(jsonString!);
-               
+                                        yaml_doc.contents = JSON.parse(response.replace(/###/g, ''))
                                         const directoryPath = vscode.workspace.rootPath;
 
                                         const openapiFilePath = path.join(directoryPath ? directoryPath : '', 'openapi.yaml');
@@ -79,42 +108,12 @@ export function activate(context: vscode.ExtensionContext) {
                                             }
                                         });
                                     } catch (error: any) {
-                                        panel.webview.postMessage({ command: 'errorOpenai', error: error.message });
+                                        panel.webview.postMessage({ command: 'errorResponse', error: error.message });
                                     }
                                 }
-                            }
-                            panel.webview.postMessage({ command: 'openaiResponse', response });
-                        });
-                    return;
-                case 'ollama':
-                    //petition_ollama('codellama', messageContext, message.text, panel)
-                    petition_ollama_full('codellama', messageContext, message.text)
-                    .then(response => {
-                        if (messageContext.length == 0) {
-                            fs.appendFileSync(logFilePathSuperserver, `CONVERSATION:\n`, 'utf-8');
-                        }      
-                        fs.appendFileSync(logFilePathSuperserver, `User: ${message.text} Assistant: ${response.trimStart()}\n`, 'utf-8');
-                        messageContext.push({ user: message.text, assistant: response})
-                        if (response?.startsWith('###')) {
-                            try {
-                                const yaml_doc = new YAML.Document();
-                                yaml_doc.contents = JSON.parse(response.replace(/###/g, ''))
-                                const directoryPath = vscode.workspace.rootPath;
-
-                                const openapiFilePath = path.join(directoryPath ? directoryPath : '', 'openapi.yaml');
-                                fs.access(openapiFilePath, fs.constants.F_OK, async (err) => {
-                                    if (err) {
-                                        await writeFile(openapiFilePath, yaml_doc.toString());
-                                    } else {
-                                        await writeFile(openapiFilePath, yaml_doc.toString());
-                                    }
-                                });
-                            } catch (error: any) {
-                                panel.webview.postMessage({ command: 'errorOpenai', error: error.message });
-                            }
-                        }
-                        panel.webview.postMessage({ command: 'openaiResponse', response });
-                    });
+                                panel.webview.postMessage({ command: 'llmResponse', response });
+                            });
+                    }
                     return;
                 case 'python_code_gen':
                     vscode.window.showInformationMessage('Re-generating python code...');

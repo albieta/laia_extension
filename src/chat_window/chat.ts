@@ -255,7 +255,7 @@ export const chat_html = `
                         appendMessage(message, 'sent');
 
                         vscode.postMessage({
-                            command: 'openapi',
+                            command: 'sendMessage',
                             text: messageInput.value.trim()
                         });
 
@@ -290,7 +290,7 @@ export const chat_html = `
 
                 window.addEventListener('message', event => {
                     const message = event.data;
-                    if (message.command === 'openaiResponse') {
+                    if (message.command === 'llmResponse') {
                         if (message.response.includes('{')) {
                             appendMessage('I have added the Openapi specifications to the openapi.yaml file. Tell me if you need to do any modifications.', 'received');
                             appendAskPythonCodeGen('Would you like me to activate the python code generator?')
@@ -298,9 +298,9 @@ export const chat_html = `
                             appendMessage(message.response, 'received');
                         }
                     }
-                    else if (message.command === 'errorOpenai') {
+                    else if (message.command === 'errorResponse') {
                         vscode.postMessage({
-                            command: 'openapi',
+                            command: 'sendMessage',
                             text: "Send the openapi json again, there was an error: " + message.error
                         });
                     }
