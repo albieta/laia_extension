@@ -15,7 +15,7 @@ code --install-extension laiaextension-X.X.X.vsix
 
 Open an empty folder/project on VS code, open the VS Code "Command Palette" and type `>Laia Chat :)`
 Click on `START LAIA` to generate the project.
-Modify the config.yaml to set an openai aki_key to get started.
+Modify the config.yaml to set an openai api_key to get started.
 
 ## Prerequisites
 
