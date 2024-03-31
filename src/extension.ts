@@ -9,10 +9,10 @@ import { home_html } from './chat_window/home';
 import { setup_files } from './config/setupFiles';
 import { readConfigYaml } from './config/config';
 import { backend_py, frontend_py } from './config/pythonFiles';
+import { start_conversation, continue_conversation } from './LLM/logs';
 
 let messageContext: { user: string, assistant: string|any }[] = [];
-const logFilePathOpenai = path.join(vscode.workspace.rootPath || '', 'conversation_openai_log.txt');
-const logFilePathSuperserver = path.join(vscode.workspace.rootPath || '', 'conversation_superserver_log.txt');
+let id_conversation = '';
 
 export function activate(context: vscode.ExtensionContext) {
 
@@ -53,11 +53,12 @@ export function activate(context: vscode.ExtensionContext) {
                 case 'sendMessage':
                     if (current_config.laia.llm_model === 'openai') {
                         petition_openai(current_config.openai.api_key, messageContext, message.text)
-                            .then(response => {
+                            .then(async response => {
                                 if (messageContext.length == 0) {
-                                    fs.appendFileSync(logFilePathOpenai, `CONVERSATION:\n`, 'utf-8');
-                                }       
-                                fs.appendFileSync(logFilePathOpenai, `User: ${message.text} Assistant: ${response?.trimStart()}\n`, 'utf-8');
+                                    id_conversation = await start_conversation("openai", `USER: ${message.text}\nASSISTANT: ${response?.trimStart()}\n`);
+                                } else {
+                                    await continue_conversation("openai", `USER: ${message.text}\nASSISTANT: ${response?.trimStart()}\n`, id_conversation);
+                                }      
                                 messageContext.push({ user: message.text, assistant: response})
                                 const startIndex = response?.indexOf('{');
                                 if (startIndex !== -1) {
@@ -87,11 +88,12 @@ export function activate(context: vscode.ExtensionContext) {
                             });
                     } else {
                         petition_ollama_full(current_config.laia.llm_model, messageContext, message.text)
-                            .then(response => {
+                            .then(async response => {
                                 if (messageContext.length == 0) {
-                                    fs.appendFileSync(logFilePathSuperserver, `CONVERSATION:\n`, 'utf-8');
-                                }      
-                                fs.appendFileSync(logFilePathSuperserver, `User: ${message.text} Assistant: ${response.trimStart()}\n`, 'utf-8');
+                                    id_conversation = await start_conversation(current_config.laia.llm_model, `USER: ${message.text}\nASSISTANT: ${response?.trimStart()}\n`);
+                                } else {
+                                    await continue_conversation(current_config.laia.llm_model, `USER: ${message.text}\nASSISTANT: ${response?.trimStart()}\n`, id_conversation);
+                                }   
                                 messageContext.push({ user: message.text, assistant: response})
                                 if (response?.startsWith('###')) {
                                     try {

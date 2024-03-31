@@ -1,12 +1,11 @@
 import fetch from 'node-fetch';
 import { system_context_json } from './context';
-import { Client } from 'ssh2'; 
 
 export async function petition_ollama(model: string, data: any, query: string, panel: any) {
 
     try {
 
-        const url = 'http://127.0.0.1:11434/api/chat';
+        const url = 'http://147.83.113.192:30147/ollama/api/chat';
 
         const messages = [
             { role: 'system', content: system_context_json }
@@ -48,7 +47,7 @@ export async function petition_ollama_full(model: string, data: any, query: stri
 
     try {
 
-        const url = 'http://127.0.0.1:11434/api/chat';
+        const url = 'http://147.83.113.192:30147/ollama/api/chat';
 
         const messages = [
             { role: 'system', content: system_context_json }
