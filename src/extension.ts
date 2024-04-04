@@ -3,7 +3,7 @@ const YAML = require('yaml');
 import * as path from 'path';
 import * as fs from 'fs';
 import { petition_openai } from './LLM/openai';
-import { petition_ollama_full } from './LLM/ollama';
+import { petition_ollama_full, petition_ollama_laia } from './LLM/ollama';
 import { chat_html } from './chat_window/chat';
 import { home_html } from './chat_window/home';
 import { setup_files } from './config/setupFiles';
@@ -87,33 +87,46 @@ export function activate(context: vscode.ExtensionContext) {
                                 panel.webview.postMessage({ command: 'llmResponse', response });
                             });
                     } else {
-                        petition_ollama_full(current_config.laia.llm_model, messageContext, message.text)
-                            .then(async response => {
-                                if (messageContext.length == 0) {
-                                    id_conversation = await start_conversation(current_config.laia.llm_model, `USER: ${message.text}\nASSISTANT: ${response?.trimStart()}\n`);
-                                } else {
-                                    await continue_conversation(current_config.laia.llm_model, `USER: ${message.text}\nASSISTANT: ${response?.trimStart()}\n`, id_conversation);
-                                }   
-                                messageContext.push({ user: message.text, assistant: response})
-                                if (response?.startsWith('###')) {
-                                    try {
-                                        const yaml_doc = new YAML.Document();
-                                        yaml_doc.contents = JSON.parse(response.replace(/###/g, ''))
-                                        const directoryPath = vscode.workspace.rootPath;
+                        //petition_ollama_full(current_config.laia.llm_model, messageContext, message.text)
+                        //    .then(async response => {
+                        //        if (messageContext.length == 0) {
+                        //            id_conversation = await start_conversation(current_config.laia.llm_model, `USER: ${message.text}\nASSISTANT: ${response?.trimStart()}\n`);
+                        //        } else {
+                        //            await continue_conversation(current_config.laia.llm_model, `USER: ${message.text}\nASSISTANT: ${response?.trimStart()}\n`, id_conversation);
+                        //        }   
+                        //        messageContext.push({ user: message.text, assistant: response})
+                        //        if (response?.startsWith('###')) {
+                        //            try {
+                        //                const yaml_doc = new YAML.Document();
+                        //                yaml_doc.contents = JSON.parse(response.replace(/###/g, ''))
+                        //                const directoryPath = vscode.workspace.rootPath;
 
-                                        const openapiFilePath = path.join(directoryPath ? directoryPath : '', 'openapi.yaml');
-                                        fs.access(openapiFilePath, fs.constants.F_OK, async (err) => {
-                                            if (err) {
-                                                await writeFile(openapiFilePath, yaml_doc.toString());
-                                            } else {
-                                                await writeFile(openapiFilePath, yaml_doc.toString());
-                                            }
-                                        });
-                                    } catch (error: any) {
-                                        panel.webview.postMessage({ command: 'errorResponse', error: error.message });
-                                    }
+                        //                const openapiFilePath = path.join(directoryPath ? directoryPath : '', 'openapi.yaml');
+                        //                fs.access(openapiFilePath, fs.constants.F_OK, async (err) => {
+                        //                    if (err) {
+                        //                        await writeFile(openapiFilePath, yaml_doc.toString());
+                        //                    } else {
+                        //                        await writeFile(openapiFilePath, yaml_doc.toString());
+                        //                    }
+                        //                });
+                        //            } catch (error: any) {
+                        //                panel.webview.postMessage({ command: 'errorResponse', error: error.message });
+                        //            }
+                        //        }
+                        //        panel.webview.postMessage({ command: 'llmResponse', response });
+                        //    });
+                        petition_ollama_laia(current_config.laia.llm_model, messageContext, message.text, panel)
+                            .then(async response => {
+                                console.log(response)
+                                if (response && response.length > 0) {
+                                    if (messageContext.length == 0) {
+                                        id_conversation = await start_conversation(current_config.laia.llm_model, `USER: ${message.text}\nASSISTANT: ${(response as any)[response.length - 1].content?.trimStart()}\n`);
+                                    } else {
+                                        await continue_conversation(current_config.laia.llm_model, `USER: ${message.text}\nASSISTANT: ${(response as any)[response.length - 1].content?.trimStart()}\n`, id_conversation);
+                                    }   
+                                    messageContext = response as any
+                                    panel.webview.postMessage({ command: 'llmResponse', response: (response as any)[response.length - 1].content });
                                 }
-                                panel.webview.postMessage({ command: 'llmResponse', response });
                             });
                     }
                     return;
