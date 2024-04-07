@@ -34,13 +34,13 @@ export function activate(context: vscode.ExtensionContext) {
     panel.webview.html = home_html;
 
     panel.webview.onDidReceiveMessage(
-        message => {
+        async message => {
             const directoryPath = vscode.workspace.rootPath;
             const current_config = readConfigYaml(directoryPath);
             var backend = ""
             var frontend = ""
             if (current_config) {
-                backend = backend_py(current_config.mongo.client_url, current_config.mongo.database_name, current_config.openapi.file_name, current_config.backend.port, current_config.backend.folder_name);
+                backend = backend_py(current_config.mongo.client_url, current_config.mongo.database_name, current_config.openapi.file_name, current_config.backend.port, current_config.backend.folder_name, current_config.backend.jwt_secret_key);
                 frontend = frontend_py(current_config.openapi.file_name, current_config.backend.folder_name, current_config.frontend.folder_name);
             }
 
@@ -181,13 +181,13 @@ export function activate(context: vscode.ExtensionContext) {
         context.subscriptions
     );
 
-	let onSaveCleaner = vscode.workspace.onDidSaveTextDocument((e) => {
+	let onSaveCleaner = vscode.workspace.onDidSaveTextDocument(async (e) => {
         const directoryPath = vscode.workspace.rootPath;
         const current_config = readConfigYaml(directoryPath);
         var backend = ""
         var frontend = ""
         if (current_config) {
-            backend = backend_py(current_config.mongo.client_url, current_config.mongo.database_name, current_config.openapi.file_name, current_config.backend.port, current_config.backend.folder_name);
+            backend = backend_py(current_config.mongo.client_url, current_config.mongo.database_name, current_config.openapi.file_name, current_config.backend.port, current_config.backend.folder_name, current_config.backend.jwt_secret_key);
             frontend = frontend_py(current_config.openapi.file_name, current_config.backend.folder_name, current_config.frontend.folder_name);
         }
 
