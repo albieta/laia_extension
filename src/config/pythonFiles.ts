@@ -1,6 +1,6 @@
 export function backend_py(mongo_client_url: string = 'mongodb://localhost:27017', mongo_database_name: string = 'laia', 
                             openapi_file_name: string = 'openapi.yaml', backend_port: string = '8000', 
-                            backend_folder_name: string = 'backend') {
+                            backend_folder_name: string = 'backend', backend_jwt_secret_key: string = 'secret_key') {
     return `
 from laiagenlib.Infrastructure.Openapi.LaiaFastApi import LaiaFastApi
 from laiagenlib.Infrastructure.LaiaBaseModel.MongoModelRepository import MongoModelRepository
@@ -22,7 +22,7 @@ db = client.${mongo_database_name}
 openapi_path = os.path.join(os.getcwd(), "${openapi_file_name}")
 
 async def backend():
-    app_instance = await LaiaFastApi(openapi_path, "${backend_folder_name}", db, MongoModelRepository, FastAPIOpenapiRepository)
+    app_instance = await LaiaFastApi(openapi_path, "${backend_folder_name}", db, MongoModelRepository, FastAPIOpenapiRepository, "${backend_jwt_secret_key}")
     
     app = app_instance.api
 

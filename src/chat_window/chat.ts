@@ -40,9 +40,18 @@ export const chat_html = `
             .sent {
                 align-self: flex-end;
             }
-
             .received {
                 align-self: flex-start;
+            }
+            .received-laia {
+                align-self: flex-start;
+                color: #2ca763;
+                font-style: italic;
+            }
+            .sent-laia {
+                align-self: flex-end;
+                color: #2ca763;
+                font-style: italic;
             }
             #user-input {
                 padding: 10px;
@@ -291,12 +300,18 @@ export const chat_html = `
                 window.addEventListener('message', event => {
                     const message = event.data;
                     if (message.command === 'llmResponse') {
-                        if (message.response.includes('{')) {
-                            appendMessage('I have added the Openapi specifications to the openapi.yaml file. Tell me if you need to do any modifications.', 'received');
-                            appendAskPythonCodeGen('Would you like me to activate the python code generator?')
-                        } else {
+                        //if (message.response.includes('{')) {
+                        //    appendMessage('I have added the Openapi specifications to the openapi.yaml file. Tell me if you need to do any modifications.', 'received');
+                        //    appendAskPythonCodeGen('Would you like me to activate the python code generator?')
+                        //} else {
                             appendMessage(message.response, 'received');
-                        }
+                        //}
+                    }
+                    else if (message.command === 'laiaConsciousnessResponse') {
+                        appendMessage(message.response, 'received-laia');
+                    }
+                    else if (message.command === 'laiaSystemResponse') {
+                        appendMessage(message.response, 'sent-laia');
                     }
                     else if (message.command === 'errorResponse') {
                         vscode.postMessage({

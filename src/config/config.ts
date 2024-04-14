@@ -12,10 +12,12 @@ export const config_yaml = {
   },
   backend: {
     'port': 8000,
-    'folder_name': 'backend'
+    'folder_name': 'backend',
+    'jwt_secret_key': 'secret_key'
   },
   frontend: {
-    'folder_name': 'frontend'
+    'folder_name': 'frontend',
+    'backend_base_url': 'http://localhost:8000'
   },
   laia: {
     'llm_model': 'openai',
