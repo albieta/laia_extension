@@ -4,7 +4,7 @@ import * as fs from 'fs';
 
 export const config_yaml = {
   mongo: {
-    'client_url': 'mongodb://localhost:27017',
+    'client_url': 'mongodb://db:27017',
     'database_name': 'laia'
   },
   openapi: {

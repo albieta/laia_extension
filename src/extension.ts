@@ -151,9 +151,9 @@ export function activate(context: vscode.ExtensionContext) {
                     if (process.platform === 'win32') {
                         terminal.sendText(`cd ${directoryPath}/${current_config.frontend.folder_name}`);
                         terminal.sendText(`flutter pub run build_runner build`);
-                        terminal.sendText(`flutter run -d chrome`);
+                        terminal.sendText(`flutter run -d web-server --web-port 8080`);
                     } else {
-                        terminal.sendText(`cd ${directoryPath}/${current_config.frontend.folder_name} && flutter pub run build_runner build && flutter run -d chrome`);
+                        terminal.sendText(`cd ${directoryPath}/${current_config.frontend.folder_name} && flutter pub run build_runner build && flutter run -d web-server --web-port 8080`);
                     }
                     return;
                 case 'backend':
@@ -170,9 +170,9 @@ export function activate(context: vscode.ExtensionContext) {
                     vscode.window.showInformationMessage('Re-generating flutter code...');
                     if (process.platform === 'win32') {
                         terminal.sendText(`cd ${directoryPath}/${current_config.frontend.folder_name}`);
-                        terminal.sendText(`flutter run -d chrome`);
+                        terminal.sendText(`flutter run -d web-server --web-port 8080`);
                     } else {
-                        terminal.sendText(`cd ${directoryPath}/${current_config.frontend.folder_name} && flutter run -d chrome`);
+                        terminal.sendText(`cd ${directoryPath}/${current_config.frontend.folder_name} && flutter run -d web-server --web-port 8080`);
                     }
                     return;
             }
